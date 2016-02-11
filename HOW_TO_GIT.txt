@@ -10,7 +10,7 @@ git add archivo.txt
 # Hacer "snapchot " de el proyecto en su estado actual
 git commit -m "archivo.txt"
 
-# Conetar a GitHub en el repositorio deseado
+# Conetar a GitHub en el repositorio deseado (solo se hace una ves por sesion)
 # username: el usuario de github
 # myproyect: el nombre del repositorio
 gir remote add origin https://github.com/username/myproject.git
