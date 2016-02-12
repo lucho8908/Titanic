@@ -12,10 +12,25 @@ for row in csv_file_object:
 	data.append(row)
 data = np.array(data)
 
-# 
+# Calculate portion of survivors
 number_passengers = np.size(data[0::,1].astype(np.float))
 number_survived = np.sum(data[0::,1].astype(np.float))
 portion_survivors = number_survived/number_passengers
-
-print('Passengeres: %s. Survived: %s' % (number_passengers,number_survived))
+print('Passengeres = %s. Survived = %s' % (number_passengers,number_survived))
 print('Percentage of surviving = %.2f %%' % (portion_survivors*100))
+
+# Get indexes for women and men
+women_ind = data[0::,4] == "female"
+men_ind = data[0::,4] != "female"
+
+# Size of women and men
+num_women = np.size(data[women_ind,1].astype(np.float))
+num_men = np.size(data[men_ind,1].astype(np.float))
+print("Number of men = %.0f" % (num_men))
+print("Number of women = %.0f" % (num_women))
+
+# Percentage of surviving amog women and men
+portion_women_surv = np.sum(data[women_ind,1].astype(np.float)) / num_women
+portion_men_surv = np.sum(data[men_ind,1].astype(np.float)) / num_men
+print("women survived = %.2f %%" %(portion_women_surv*100))
+print("men survived = %.2f %%" %(portion_men_surv*100))
