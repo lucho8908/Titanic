@@ -34,3 +34,7 @@ portion_women_surv = np.sum(data[women_ind,1].astype(np.float)) / num_women
 portion_men_surv = np.sum(data[men_ind,1].astype(np.float)) / num_men
 print("women survived = %.2f %%" %(portion_women_surv*100))
 print("men survived = %.2f %%" %(portion_men_surv*100))
+
+# Leer test
+csv_test_object = csv.reader(open('data/test.csv','rb'))
+header = csv_test_object.next()
