@@ -1,0 +1,23 @@
+# Decirle a git que haga segimiento del folder local actual (solo debe hacerse una vez en cada folder)
+git init
+
+# Revisar el status del git
+git status
+
+# Hacer que git reconozca todos los archivos "untracked"
+git add archivo.txt
+
+# Hacer "snapchot " de el proyecto en su estado actual
+git commit -m "archivo.txt"
+
+# Conetar a GitHub en el repositorio deseado (solo se hace una ves por sesion)
+# username: el usuario de github
+# myproyect: el nombre del repositorio
+gir remote add origin https://github.com/username/myproject.git
+
+# Verificar la conexion
+git remote -v
+
+# Empujar archivos al repositorio remoto
+# master: se puede cambiar por la brach a la que desee empujar 
+git push origin master
