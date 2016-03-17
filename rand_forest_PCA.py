@@ -1,4 +1,6 @@
 import sys
+import time
+import csv as csv 
 import numpy as np
 #Data manipulation library
 import pandas
@@ -6,110 +8,82 @@ import pandas
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import cross_validation
 
+# Import data as a data fram on pandas
+data = pandas.read_csv("csv/train.csv")
 
-#Loads the training data
-titanic = pandas.read_csv("data/train.csv")
+# Convert data frame to array
+data1 = np.asarray(data)
 
-#Loads the testing data
-titanic_test = pandas.read_csv("data/test.csv")
+number_passengers = np.size(data1[0::,1].astype(np.float))
+number_survived = np.sum(data1[0::,1].astype(np.float))
+proportion_survivors = number_survived / number_passengers
 
+# This finds where all the elements in the gender column that equals female
+women_only_stats = data1[0::,4] == "female"
+
+# This finds where all the elements do not equal female (i.e. male)
+men_only_stats = data1[0::,4] != "female"
+
+# Using the index from above we select the females and males separately
+women_onboard = data1[women_only_stats,1].astype(np.float)     
+men_onboard = data1[men_only_stats,1].astype(np.float)
+
+# Then we finds the proportions of them that survived
+proportion_women_survived = np.sum(women_onboard) / np.size(women_onboard)  
+proportion_men_survived = np.sum(men_onboard) / np.size(men_onboard) 
+
+print 'Proportion of women who survived is %s' % proportion_women_survived
+print 'Proportion of men who survived is %s' % proportion_men_survived
 
 #------- Data cleaning ---------
-# Training
+
 #--- Age
-titanic["Age"] = titanic["Age"].fillna(titanic["Age"].median())
+data['Age'] = data['Age'].fillna(data['Age'].median())
 
 #--- Sex
-titanic.loc[titanic["Sex"] == "male", "Sex"] = 0
-titanic.loc[titanic["Sex"] == "female", "Sex"] = 1
-titanic["Sex"] = titanic["Sex"].fillna(0)
+data.loc[data["Sex"] == "male", "Sex"] = 0 
+data.loc[data["Sex"] == "female", "Sex"] = 1
+data["Sex"] = data["Sex"].fillna(0)
 
 #--- Embarked
-titanic["Embarked"] = titanic["Embarked"].fillna("S")
-titanic.loc[titanic["Embarked"] == "S", "Embarked"] = 0
-titanic.loc[titanic["Embarked"] == "C", "Embarked"] = 1
-titanic.loc[titanic["Embarked"] == "Q", "Embarked"] = 2
-
-
-#Testing 
-
-#Removes the rows with no PassengerId
-titanic_test = titanic_test[np.isfinite(titanic_test["PassengerId"])]
-
-
-#---- PassengerId 
-titanic_test["PassengerId"] = titanic_test["PassengerId"].fillna(0)
-
-#---- Pclass
-titanic_test["Pclass"] = titanic_test["Pclass"].fillna(titanic["Pclass"].median())
-
-#---- SibSp
-titanic_test["SibSp"] = titanic_test["SibSp"].fillna(titanic["SibSp"].median())
-
-#---- Parch
-titanic_test["Parch"] = titanic_test["Parch"].fillna(titanic["Parch"].median())
-
-#--- Age
-titanic_test["Age"] = titanic_test["Age"].fillna(titanic["Age"].median())
-
-#---- Sex 
-titanic_test.loc[titanic_test["Sex"] == "male", "Sex"] = 0
-titanic_test.loc[titanic_test["Sex"] == "female", "Sex"] = 1
-titanic_test["Sex"] = titanic_test["Sex"].fillna(0)
-
-
-#---- Embarked
-titanic_test["Embarked"] = titanic_test["Embarked"].fillna("S")
-titanic_test.loc[titanic_test["Embarked"] == "S", "Embarked"] = 0
-titanic_test.loc[titanic_test["Embarked"] == "C", "Embarked"] = 1
-titanic_test.loc[titanic_test["Embarked"] == "Q", "Embarked"] = 2
-
-#---- Fare 
-titanic_test["Fare"] = titanic_test["Fare"].fillna(titanic["Fare"].median())
-
-
-
-# ----- Data enhancement --------
-
-# Generating a familysize column
-titanic["FamilySize"] = titanic["SibSp"] + titanic["Parch"]
-titanic_test["FamilySize"] = titanic_test["SibSp"] + titanic_test["Parch"]
+data["Embarked"] = data["Embarked"].fillna("S")
+data.loc[data["Embarked"] == "S", "Embarked"] = 0
+data.loc[data["Embarked"] == "C", "Embarked"] = 1
+data.loc[data["Embarked"] == "Q", "Embarked"] = 2
 
 # The .apply method generates a new series
-titanic["NameLength"] = titanic["Name"].apply(lambda x: len(x))
-titanic_test["NameLength"] = titanic_test["Name"].apply(lambda x: len(x))
+data["Name_len"] = data["Name"].apply(lambda x: len(x))
 
-#print(titanic.describe())
-#print(titanic_test.describe())
-#sys.exit()
+# Generating a familysize column
+data["FamilySize"] = data["SibSp"] + data["Parch"]
 
+# Extract only numerical columns
+num_data = data[["PassengerId","Pclass","Sex","Age","SibSp","Parch","Fare","Name_len","FamilySize"]]
 
-#------ Creates the algorithm
-#predictors
-predictors = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked", "FamilySize", "NameLength"]
-#predictors = [ "Sex", "Age"]
-
-
-# Initialize the algorithm class
-alg = RandomForestClassifier(random_state=1, n_estimators=10, min_samples_split=2, min_samples_leaf=1)
-
-#Calculates the scores for the training dataframe and pronts it
-scores = cross_validation.cross_val_score(alg, titanic[predictors], titanic["Survived"], cv=3)
-print(scores.mean())
-
-# Train the algorithm using all the training data
-alg.fit(titanic[predictors], titanic["Survived"])
-
-# Make predictions using the test set.
-predictions = alg.predict(titanic_test[predictors])
-
-# Create a new dataframe with only the columns Kaggle wants from the dataset.
-submission = pandas.DataFrame({
-        "PassengerId": titanic_test["PassengerId"],
-        "Survived": predictions
-    })
+# Import my PCA algorithm
+from myPCA import *
+for num_comp in np.arange(1,9):
+    start_time = time.time() #Starts time coounter
+    pca = myPCA(np.asmatrix(num_data),num_comp) #Runs myPCA
     
-submission.PassengerId = submission.PassengerId.astype(int)
-
-#Prints the submission    
-submission.to_csv("submission.csv", index=False)    
+    TX = pca['TX'] # Data transformed using myPCA
+    
+    # Index and colmns names to create data frame
+    index  = np.arange(np.shape(pca['TX'])[0])
+    columns = np.arange(1,np.shape(pca['TX'])[1]+1)
+    columns = map(str, columns)
+    
+    #Data frame of transmormed variables and concatenae the survived column
+    T_data = pandas.DataFrame(TX, index=index, columns=columns)
+    T_data = pandas.concat([data['Survived'], T_data], axis=1)
+    
+    #As predictors use all the columns in T_data
+    predictors = columns
+    
+    # Initialize the algorithm class
+    alg = RandomForestClassifier(random_state=1, n_estimators=10, min_samples_split=2, min_samples_leaf=1)
+    
+    #Calculates the scores for the training dataframe and pronts it
+    scores = cross_validation.cross_val_score(alg, T_data[predictors], T_data["Survived"], cv=3)
+    print("--- %s seconds ---" % (time.time() - start_time))
+    print("Error de crossvalidation: %s" % scores.mean())
